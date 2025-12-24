@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="description" content="Advanced Scientific Calculator with graphing, equation solving, and unit conversion" />
+  <meta name="keywords" content="calculator, scientific calculator, math, trigonometry, algebra, graphing" />
+  <meta name="author" content="Scientific Calculator Team" />
+  <title>Advanced Scientific Calculator | Math & Engineering Tool</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>" />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Responsive Meta -->
+  <style>
+    /* Responsive adjustments for different screen sizes */
+    @media (max-width: 1200px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      .sidebar {
+        width: 100%;
+        max-height: 40vh;
+        overflow-y: auto;
+        order: 2;
+      }
+      
+      .calculator-app {
+        width: 100%;
+        order: 1;
+      }
+      
+      .tools-tabs {
+        flex-wrap: wrap;
+      }
+      
+      .tool-tab .tab-label {
+        display: inline;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .function-buttons,
+      .button-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .scientific-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .calc-title {
+        font-size: 1.5rem;
+      }
+      
+      .calc-subtitle {
+        font-size: 0.9rem;
+      }
+      
+      .status-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .memory-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .converter-input-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .converter-row {
+        width: 100%;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .function-buttons,
+      .button-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+      }
+      
+      .btn {
+        padding: 12px 8px;
+        font-size: 0.9rem;
+      }
+      
+      .scientific-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .tools-tabs {
+        justify-content: center;
+      }
+      
+      .tool-tab {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+      }
+      
+      .tool-tab .tab-label {
+        display: none;
+      }
+      
+      .tool-tab i {
+        margin-right: 0;
+      }
+    }
+    
+    /* History copy button styles */
+    .history-entry {
+      position: relative;
+      padding-right: 40px;
+    }
+    
+    .btn-copy-history-entry {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .btn-copy-history-entry:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    
+    /* Two-way converter improvements */
+    .converter-two-way {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .converter-direction {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+    
+    .direction-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Mobile sidebar toggle */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    @media (max-width: 1200px) {
+      .sidebar-toggle {
+        display: block;
+      }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 90%;
+        max-width: 400px;
+        height: 100vh;
+        z-index: 999;
+        transition: right 0.3s ease;
+        box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+      }
+      
+      .sidebar.active {
+        right: 0;
+      }
+      
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 998;
+      }
+      
+      .sidebar-overlay.active {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Mobile Sidebar Toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+      <i class="fas fa-sliders-h"></i>
+    </button>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <div class="container">
+      <!-- Sidebar for additional features -->
+      <aside class="sidebar" id="sidebar">
+        <!-- Tools Header -->
+        <div class="tools-header">
+          <div class="tools-header-top">
+            <h3 class="tools-title">
+              <i class="fas fa-tools"></i>
+              Math Tools
+            </h3>
+            <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="tools-tabs">
+            <button class="tool-tab active" data-tool="converter" id="converterTab">
+              <i class="fas fa-exchange-alt"></i>
+              <span class="tab-label">Converter</span>
+            </button>
+            <button class="tool-tab" data-tool="stopwatch" id="stopwatchTab">
+              <i class="fas fa-stopwatch"></i>
+              <span class="tab-label">Stopwatch</span>
+            </button>
+            <button class="tool-tab" data-tool="timer" id="timerTab">
+              <i class="fas fa-clock"></i>
+              <span class="tab-label">Timer</span>
+            </button>
+            <button class="tool-tab" data-tool="history" id="historyTab">
+              <i class="fas fa-history"></i>
+              <span class="tab-label">History</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tool Content Container -->
+        <div class="tool-content-container">
+          <!-- Unit Converter Tab (Active by default) -->
+          <div class="tool-content active" id="converterContent">
+            <div class="converter-container">
+              <!-- Two-way converter labels -->
+              <div class="converter-direction">
+                <span class="direction-label">From:</span>
+                <span class="direction-label">To:</span>
+              </div>
+              
+              <!-- Enhanced Converter Input Area -->
+              <div class="converter-two-way">
+                <div class="converter-row">
+                  <div class="converter-input-group">
+                    <input type="number" id="converterInput" class="converter-input" placeholder="Enter value" value="1" step="any">
+                    <select id="converterFrom" class="converter-select">
+                      <!-- Options populated by JavaScript -->
+                    </select>
+                  </div>
+                  <div class="converter-result-group">
+                    <div id="converterResult" class="converter-result">1.000</div>
+                    <select id="converterTo" class="converter-select">
+                      <!-- Options populated by JavaScript -->
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="converter-actions">
+                  <button id="swapUnits" class="btn-convert-action" aria-label="Swap units" title="Swap units">
+                    <i class="fas fa-exchange-alt"></i> Swap
+                  </button>
+                  <button id="copyConversion" class="btn-convert-action" aria-label="Copy conversion" title="Copy conversion">
+                    <i class="fas fa-copy"></i> Copy
+                  </button>
+                </div>
+
+                <!-- Quick Convert Button -->
+                <button id="quickConvert" class="btn-quick-convert">
+                  <i class="fas fa-bolt"></i> Convert Now
+                </button>
+              </div>
+
+              <!-- Quick Conversions -->
+              <div class="quick-conversions">
+                <h4 class="quick-title">
+                  <i class="fas fa-bolt"></i> Quick Conversions
+                </h4>
+                <div class="quick-buttons" id="quickConversions">
+                  <!-- Populated by JavaScript -->
+                </div>
+              </div>
+
+              <!-- Conversion History -->
+              <div class="conversion-history">
+                <div class="history-header">
+                  <h4><i class="fas fa-history"></i> Conversion History</h4>
+                  <div class="history-actions">
+                    <button id="copyAllConversions" class="btn-copy-all" title="Copy all conversions">
+                      <i class="fas fa-copy"></i>
+                    </button>
+                    <button id="clearConversionHistory" class="btn-clear" title="Clear history">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                <div id="conversionHistoryList" class="history-list">
+                  <!-- History items populated by JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stopwatch Tab -->
+          <div class="tool-content" id="stopwatchContent">
+            <div class="stopwatch-container">
+              <div class="stopwatch-display">
+                <span id="stopwatchHours">00</span>:<span id="stopwatchMinutes">00</span>:<span id="stopwatchSeconds">00</span>
+                <span class="milliseconds">.<span id="stopwatchMilliseconds">000</span></span>
+              </div>
+              <div class="stopwatch-controls">
+                <button id="stopwatchStart" class="btn-stopwatch">
+                  <i class="fas fa-play"></i> Start
+                </button>
+                <button id="stopwatchPause" class="btn-stopwatch">
+                  <i class="fas fa-pause"></i> Pause
+                </button>
+                <button id="stopwatchReset" class="btn-stopwatch">
+                  <i class="fas fa-redo"></i> Reset
+                </button>
+                <button id="stopwatchLap" class="btn-stopwatch">
+                  <i class="fas fa-flag"></i> Lap
+                </button>
+              </div>
+              <div class="laps-container">
+                <div class="laps-header">
+                  <h4>Lap Times</h4>
+                  <button id="copyLaps" class="btn-copy-laps" title="Copy lap times">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+                <div id="lapTimes" class="laps-list">
+                  <!-- Lap times will be added here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timer Tab -->
+          <div class="tool-content" id="timerContent">
+            <div class="timer-container">
+              <div class="timer-display">
+                <div class="time-inputs">
+                  <input type="number" id="timerHours" min="0" max="99" value="0" class="time-input">
+                  <span class="time-separator">:</span>
+                  <input type="number" id="timerMinutes" min="0" max="59" value="5" class="time-input">
+                  <span class="time-separator">:</span>
+                  <input type="number" id="timerSeconds" min="0" max="59" value="0" class="time-input">
+                </div>
+                <div class="timer-progress">
+                  <div class="progress-bar">
+                    <div id="timerProgress" class="progress-fill"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="timer-controls">
+                <button id="timerStart" class="btn-timer">
+                  <i class="fas fa-play"></i> Start
+                </button>
+                <button id="timerPause" class="btn-timer">
+                  <i class="fas fa-pause"></i> Pause
+                </button>
+                <button id="timerReset" class="btn-timer">
+                  <i class="fas fa-redo"></i> Reset
+                </button>
+                <button id="timerPreset" class="btn-timer">
+                  <i class="fas fa-clock"></i> Presets
+                </button>
+              </div>
+              <div class="timer-presets">
+                <button class="preset-btn" data-minutes="1">1 min</button>
+                <button class="preset-btn" data-minutes="5">5 min</button>
+                <button class="preset-btn" data-minutes="10">10 min</button>
+                <button class="preset-btn" data-minutes="15">15 min</button>
+                <button class="preset-btn" data-minutes="30">30 min</button>
+              </div>
+              <div class="timer-alarm">
+                <label for="alarmSound">Alarm Sound:</label>
+                <select id="alarmSound" class="alarm-select">
+                  <option value="beep">Beep</option>
+                  <option value="bell">Bell</option>
+                  <option value="digital">Digital</option>
+                  <option value="chime">Chime</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Tab -->
+          <div class="tool-content" id="historyContent">
+            <div class="history-container-tab">
+              <div class="history-header-tab">
+                <h4><i class="fas fa-history"></i> Calculation History</h4>
+                <div class="history-actions">
+                  <button id="copyAllHistory" class="btn-history" title="Copy All History">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button id="exportHistory" class="btn-history" title="Export History">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button id="clearAllHistory" class="btn-history" title="Clear All History">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div id="fullHistoryList" class="full-history-list">
+                <!-- Full history will be populated by JavaScript -->
+                <div class="history-entry">
+                  <div class="history-expr">2 + 2 × 3</div>
+                  <div class="history-result">8</div>
+                  <button class="btn-copy-history-entry" title="Copy result">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+                <div class="history-entry">
+                  <div class="history-expr">sin(π/2)</div>
+                  <div class="history-result">1</div>
+                  <button class="btn-copy-history-entry" title="Copy result">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="history-stats">
+                <div class="stat-item">
+                  <span class="stat-label">Total Calculations:</span>
+                  <span id="totalCalculations" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Last Used:</span>
+                  <span id="lastCalculationTime" class="stat-value">Never</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Constants Panel (Always visible) -->
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">
+              <i class="fas fa-infinity"></i>
+              Mathematical Constants
+            </h3>
+            <div class="constants-grid" id="constantsGrid">
+              <!-- Constants will be populated by JavaScript -->
+              <div class="constant-item" data-constant="pi" data-value="3.14159265359">
+                <span class="constant-name">π (Pi)</span>
+                <span class="constant-value">3.14159265359</span>
+                <button class="btn-copy-constant" title="Copy π">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+              <div class="constant-item" data-constant="e" data-value="2.71828182846">
+                <span class="constant-name">e (Euler's)</span>
+                <span class="constant-value">2.71828182846</span>
+                <button class="btn-copy-constant" title="Copy e">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="calculator-app" role="application" aria-label="Scientific Calculator">
+        <!-- Header with title and controls -->
+        <header class="calc-header">
+          <div class="header-content">
+            <h1 class="calc-title">
+              <span class="icon" aria-hidden="true">🧮</span>
+              Scientific Calculator Pro
+            </h1>
+            <div class="calc-subtitle">
+              <i class="fas fa-calculator"></i>
+              Advanced Math Functions & Unit Converter 
+              <span class="badge">v3.0</span>
+            </div>
+          </div>
+          
+          <div class="mode-controls">
+            <div class="mode-group">
+              <div class="mode-toggle">
+                <label for="modeToggle" class="toggle-label">
+                  <span class="mode-text">Standard</span>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="modeToggle" name="modeToggle" 
+                           aria-label="Toggle between standard and scientific mode" 
+                           aria-checked="false" role="switch" />
+                    <span class="toggle-slider"></span>
+                  </div>
+                  <span class="mode-text">Scientific</span>
+                </label>
+              </div>
+              
+              <div class="angle-controls">
+                <div class="angle-toggle" role="radiogroup" aria-label="Angle unit selection">
+                  <button class="angle-btn active" id="radBtn" data-unit="rad" 
+                          aria-label="Use radians for trigonometric functions" 
+                          aria-pressed="true">
+                    RAD
+                  </button>
+                  <button class="angle-btn" id="degBtn" data-unit="deg" 
+                          aria-label="Use degrees for trigonometric functions" 
+                          aria-pressed="false">
+                    DEG
+                  </button>
+                  <button class="angle-btn" id="gradBtn" data-unit="grad" 
+                          aria-label="Use gradians for trigonometric functions" 
+                          aria-pressed="false">
+                    GRAD
+                  </button>
+                </div>
+                <div class="angle-indicator" id="angleMode">RAD</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Memory and status bar -->
+        <div class="status-bar" aria-live="polite" aria-atomic="true">
+          <div class="status-group">
+            <div class="memory-indicator">
+              <span class="memory-label">
+                <i class="fas fa-memory"></i>
+                Memory:
+              </span>
+              <span id="memoryValue" class="memory-value">0</span>
+              <div class="memory-buttons">
+                <button id="memoryClear" class="btn-memory" aria-label="Clear memory" title="Clear Memory">
+                  <i class="fas fa-trash"></i> MC
+                </button>
+                <button id="memoryRecall" class="btn-memory" aria-label="Recall from memory" title="Recall Memory">
+                  <i class="fas fa-redo"></i> MR
+                </button>
+                <button id="memoryAdd" class="btn-memory" aria-label="Add to memory" title="Add to Memory">
+                  <i class="fas fa-plus"></i> M+
+                </button>
+                <button id="memorySubtract" class="btn-memory" aria-label="Subtract from memory" title="Subtract from Memory">
+                  <i class="fas fa-minus"></i> M-
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="char-counter" id="charCounter">
+            <span id="charCount">0</span>/<span id="charLimit">50</span>
+          </div>
+        </div>
+
+        <!-- Calculator display area -->
+        <section class="display-area" aria-live="polite" aria-atomic="true">
+          <div class="history-container">
+            <div id="history" class="history" aria-label="Calculation history">
+              <!-- History entries with copy buttons -->
+              <div class="history-entry">
+                <span class="history-expression">2 + 2 × 3</span>
+                <span class="history-result">8</span>
+                <button class="btn-copy-history-entry" title="Copy result">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+            </div>
+            <button id="clearHistory" class="btn-clear-history" aria-label="Clear history" title="Clear History">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="display-container">
+            <div id="expression" class="expression" aria-label="Current expression"></div>
+            <div id="display" class="display" role="status" aria-label="Current display value">0</div>
+          </div>
+        </section>
+
+        <!-- Main calculator buttons -->
+        <section class="buttons-area">
+          <!-- Function buttons row -->
+          <div class="function-buttons">
+            <button class="btn func secondary" data-action="mem-clear" aria-label="Memory clear">MC</button>
+            <button class="btn func secondary" data-action="mem-recall" aria-label="Memory recall">MR</button>
+            <button class="btn func secondary" data-action="mem-add" aria-label="Memory add">M+</button>
+            <button class="btn func secondary" data-action="mem-subtract" aria-label="Memory subtract">M-</button>
+            <button class="btn func" data-action="clear" aria-label="Clear all">AC</button>
+            <button class="btn func" data-action="clear-entry" aria-label="Clear entry">CE</button>
+            <button class="btn func" data-action="back" aria-label="Backspace">
+              <i class="fas fa-backspace"></i>
+            </button>
+            <button class="btn func" data-action="percent" aria-label="Percentage">%</button>
+          </div>
+
+          <!-- Scientific functions (togglable) -->
+          <div class="scientific-section" id="scientificSection" aria-hidden="true">
+            <div class="scientific-buttons" id="scientificButtons">
+              <!-- Row 1: Basic Functions -->
+              <div class="scientific-row">
+                <button class="btn sci" data-fn="sin" aria-label="Sine">sin</button>
+                <button class="btn sci" data-fn="cos" aria-label="Cosine">cos</button>
+                <button class="btn sci" data-fn="tan" aria-label="Tangent">tan</button>
+                <button class="btn sci" data-fn="log" aria-label="Logarithm base 10">log₁₀</button>
+                <button class="btn sci" data-fn="ln" aria-label="Natural logarithm">ln</button>
+                <button class="btn sci" data-fn="exp" aria-label="Exponential">eˣ</button>
+              </div>
+              <!-- Row 2: Inverse & Power -->
+              <div class="scientific-row">
+                <button class="btn sci" data-fn="asin" aria-label="Arcsine">sin⁻¹</button>
+                <button class="btn sci" data-fn="acos" aria-label="Arccosine">cos⁻¹</button>
+                <button class="btn sci" data-fn="atan" aria-label="Arctangent">tan⁻¹</button>
+                <button class="btn sci" data-fn="sqrt" aria-label="Square root">√</button>
+                <button class="btn sci" data-fn="cbrt" aria-label="Cube root">∛</button>
+                <button class="btn sci" data-fn="pow" aria-label="Power">xʸ</button>
+              </div>
+              <!-- Row 3: Advanced Functions -->
+              <div class="scientific-row">
+                <button class="btn sci" data-fn="fact" aria-label="Factorial">x!</button>
+                <button class="btn sci" data-fn="abs" aria-label="Absolute value">|x|</button>
+                <button class="btn sci" data-fn="pi" aria-label="Pi constant">π</button>
+                <button class="btn sci" data-fn="e" aria-label="Euler's number">e</button>
+                <button class="btn sci" data-fn="mod" aria-label="Modulo">mod</button>
+                <button class="btn sci" data-fn="rand" aria-label="Random number">Rand</button>
+              </div>
+              <!-- Row 4: Statistical & Hyperbolic -->
+              <div class="scientific-row">
+                <button class="btn sci" data-fn="sinh" aria-label="Hyperbolic sine">sinh</button>
+                <button class="btn sci" data-fn="cosh" aria-label="Hyperbolic cosine">cosh</button>
+                <button class="btn sci" data-fn="tanh" aria-label="Hyperbolic tangent">tanh</button>
+                <button class="btn sci" data-fn="asinh" aria-label="Inverse hyperbolic sine">asinh</button>
+                <button class="btn sci" data-fn="acosh" aria-label="Inverse hyperbolic cosine">acosh</button>
+                <button class="btn sci" data-fn="atanh" aria-label="Inverse hyperbolic tangent">atanh</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main button grid -->
+          <div class="button-grid">
+            <!-- Row 1 -->
+            <button class="btn func paren" data-action="paren-open" aria-label="Open parenthesis">(</button>
+            <button class="btn func paren" data-action="paren-close" aria-label="Close parenthesis">)</button>
+            <button class="btn op" data-value="^" aria-label="Power">
+              <i class="fas fa-arrow-up"></i>
+            </button>
+            <button class="btn op" data-value="/" aria-label="Divide">÷</button>
+            
+            <!-- Row 2 -->
+            <button class="btn num" data-value="7" aria-label="Seven">7</button>
+            <button class="btn num" data-value="8" aria-label="Eight">8</button>
+            <button class="btn num" data-value="9" aria-label="Nine">9</button>
+            <button class="btn op" data-value="*" aria-label="Multiply">×</button>
+            
+            <!-- Row 3 -->
+            <button class="btn num" data-value="4" aria-label="Four">4</button>
+            <button class="btn num" data-value="5" aria-label="Five">5</button>
+            <button class="btn num" data-value="6" aria-label="Six">6</button>
+            <button class="btn op" data-value="-" aria-label="Subtract">−</button>
+            
+            <!-- Row 4 -->
+            <button class="btn num" data-value="1" aria-label="One">1</button>
+            <button class="btn num" data-value="2" aria-label="Two">2</button>
+            <button class="btn num" data-value="3" aria-label="Three">3</button>
+            <button class="btn op" data-value="+" aria-label="Add">+</button>
+            
+            <!-- Row 5 -->
+            <button class="btn num zero" data-value="0" aria-label="Zero">0</button>
+            <button class="btn num" data-value="." aria-label="Decimal point">.</button>
+            <button class="btn func" data-action="sign" aria-label="Change sign">±</button>
+            <button class="btn func equals" data-action="equals" aria-label="Equals">=</button>
+          </div>
+
+          <!-- Additional controls -->
+          <div class="additional-controls">
+            <button class="btn secondary small" id="copyResult" aria-label="Copy result to clipboard">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+            <button class="btn secondary small" id="loadExample" aria-label="Load example calculation">
+              <i class="fas fa-lightbulb"></i> Example
+            </button>
+            <button class="btn secondary small" id="helpBtn" aria-label="Show help">
+              <i class="fas fa-question-circle"></i> Help
+            </button>
+            <button class="btn secondary small" id="themeToggle" aria-label="Toggle theme">
+              <i class="fas fa-palette"></i> Theme
+            </button>
+            <button class="btn secondary small" id="toggleSidebar" aria-label="Toggle sidebar">
+              <i class="fas fa-sliders-h"></i> Tools
+            </button>
+          </div>
+        </section>
+
+        <!-- Calculator footer -->
+        <footer class="calc-footer">
+          <div class="footer-content">
+            <div class="shortcuts-info">
+              <span class="keyboard-icon" aria-hidden="true">
+                <i class="fas fa-keyboard"></i>
+              </span>
+              Shortcuts: 
+              <kbd>0-9</kbd><kbd>+</kbd><kbd>-</kbd><kbd>*</kbd><kbd>/</kbd>
+              <kbd>Enter</kbd> = <kbd>Esc</kbd> AC <kbd>Backspace</kbd> ⌫
+            </div>
+            <div class="angle-info">
+              <i class="fas fa-protractor"></i>
+              Angle: <span id="currentAngleMode" class="angle-mode">RADIANS</span>
+            </div>
+          </div>
+          <div class="footer-note">
+            <small>
+              <i class="fas fa-info-circle"></i>
+              Supports up to <strong id="maxChars">50</strong> characters. 
+              Press <kbd>Shift</kbd> + function key for advanced operations.
+              <span class="mobile-hint">Tap on history items to copy.</span>
+            </small>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- Help modal (hidden by default) -->
+  <div class="modal" id="helpModal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">
+          <i class="fas fa-question-circle"></i>
+          Calculator Help & Guide
+        </h2>
+        <button class="modal-close" id="closeModal" aria-label="Close help">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <h3><i class="fas fa-calculator"></i> Basic Operations</h3>
+          <ul>
+            <li><strong>AC</strong> (All Clear): Clears everything (display, expression, memory)</li>
+            <li><strong>CE</strong> (Clear Entry): Clears current entry only</li>
+            <li><strong>±</strong> (Sign Change): Toggles between positive and negative</li>
+            <li><strong>%</strong> (Percentage): Calculates percentage of current value</li>
+            <li><strong>=</strong> (Equals): Calculates and shows result</li>
+          </ul>
+        </div>
+
+        <div class="modal-section">
+          <h3><i class="fas fa-copy"></i> Copy Features</h3>
+          <ul>
+            <li><strong>Copy Result</strong>: Click the Copy button or copy from display</li>
+            <li><strong>History Copy</strong>: Click the copy icon next to any history item</li>
+            <li><strong>Copy All History</strong>: Use the copy all button in History tab</li>
+            <li><strong>Constants Copy</strong>: Click copy icon next to any constant</li>
+          </ul>
+        </div>
+
+        <div class="modal-section">
+          <h3><i class="fas fa-exchange-alt"></i> Two-Way Converter</h3>
+          <ul>
+            <li>Enter value in either "From" or "To" field</li>
+            <li>Conversion happens automatically in both directions</li>
+            <li>Use "Swap" button to reverse conversion direction</li>
+            <li>Quick conversion buttons for common conversions</li>
+          </ul>
+        </div>
+
+        <div class="modal-section">
+          <h3><i class="fas fa-mobile-alt"></i> Mobile & Tablet Features</h3>
+          <ul>
+            <li><strong>Responsive Design</strong>: Adjusts to all screen sizes</li>
+            <li><strong>Touch-Friendly</strong>: Larger buttons for mobile</li>
+            <li><strong>Swipe Support</strong>: Swipe on display to navigate history</li>
+            <li><strong>Sidebar Toggle</strong>: Use Tools button to show/hide sidebar</li>
+          </ul>
+        </div>
+
+        <div class="modal-section">
+          <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+          <div class="shortcut-grid">
+            <div class="shortcut-item">
+              <div class="shortcut-keys">
+                <kbd>0-9</kbd><kbd>.</kbd>
+              </div>
+              <div class="shortcut-desc">Numbers & decimal</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-keys">
+                <kbd>+</kbd><kbd>-</kbd><kbd>*</kbd><kbd>/</kbd>
+              </div>
+              <div class="shortcut-desc">Basic operations</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-keys">
+                <kbd>Enter</kbd>
+              </div>
+              <div class="shortcut-desc">Calculate (=)</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-keys">
+                <kbd>Escape</kbd>
+              </div>
+              <div class="shortcut-desc">Clear All (AC)</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-keys">
+                <kbd>Backspace</kbd>
+              </div>
+              <div class="shortcut-desc">Delete last digit</div>
+            </div>
+            <div class="shortcut-item">
+              <div class="shortcut-keys">
+                <kbd>Ctrl+C</kbd>
+              </div>
+              <div class="shortcut-desc">Copy result</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h3><i class="fas fa-memory"></i> Memory Functions</h3>
+          <p>Use memory functions to store and recall values:</p>
+          <ul>
+            <li><strong>MC</strong>: Memory Clear - Clears the memory</li>
+            <li><strong>MR</strong>: Memory Recall - Recalls value from memory</li>
+            <li><strong>M+</strong>: Memory Add - Adds current value to memory</li>
+            <li><strong>M-</strong>: Memory Subtract - Subtracts current value from memory</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer"></div>
+
+  <!-- JavaScript -->
+  <script src="script.js" defer></script>
+</body>
+</html>
